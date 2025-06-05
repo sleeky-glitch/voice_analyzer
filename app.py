@@ -13,7 +13,7 @@ st.set_page_config(page_title="Voice Intelligence", page_icon="🎙️", layout=
 MODEL_TRANSCRIBE = "whisper-1"
 # OpenAI recently re-branded GPT-4-o (May-2024).  If “gpt-4-1” is GA in your tenancy
 # swap MODEL_ANALYZE below.  Fallback to gpt-4o.
-MODEL_ANALYZE = "gpt-4o-mini"       # try "gpt-4o" or "gpt-4o-2024-05-13"
+MODEL_ANALYZE = "gpt-4.1-2025-04-14"       # try "gpt-4o" or "gpt-4o-2024-05-13"
 
 RECORD_LIB = "audio_recorder_streamlit"  # pip install audio_recorder_streamlit
 
