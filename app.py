@@ -17,19 +17,12 @@ MODEL_ANALYZE = "gpt-4.1-2025-04-14"       # try "gpt-4o" or "gpt-4o-2024-05-13"
 
 RECORD_LIB = "audio_recorder_streamlit"  # pip install audio_recorder_streamlit
 
+# Initialize OpenAI client with API key from secrets
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 # ------------- SIDEBAR -------------------------------------------------------
 with st.sidebar:
-    st.header("🔑 API Settings")
-    
-    # Try to get API key from secrets first, fallback to user input
-    try:
-        api_key = st.secrets["OPENAI_API_KEY"]
-        st.success("✅ API key loaded from secrets")
-    except (KeyError, FileNotFoundError):
-        api_key = st.text_input("OpenAI API Key", type="password")
-        if not api_key:
-            st.info("Add OPENAI_API_KEY to your Streamlit secrets or enter it above")
-    
+    st.header("⚙️ Settings")
     temp = st.slider("LLM temperature", 0.0, 1.0, 0.3, 0.05)
     st.markdown("---")
     input_mode = st.radio(
@@ -37,16 +30,16 @@ with st.sidebar:
         ("Upload audio file", "Record from mic"),
         index=0
     )
-    st.markdown(
-        "Need an API key? [Create one](https://platform.openai.com/account/api-keys)"
-    )
 
 # ------------- HELPER FUNCTIONS ---------------------------------------------
 def transcribe_audio(file_path: str) -> str:
     """Send file to Whisper and return transcript text."""
     with open(file_path, "rb") as f:
-        response = openai.Audio.transcribe(MODEL_TRANSCRIBE, f)
-    return response["text"]
+        transcript = client.audio.transcriptions.create(
+            model=MODEL_TRANSCRIBE,
+            file=f
+        )
+    return transcript.text
 
 def analyze_text(text: str, temperature: float = 0.3) -> Dict:
     """Ask GPT-4-o for sentiment & threat assessment, return JSON dict."""
@@ -59,7 +52,7 @@ def analyze_text(text: str, temperature: float = 0.3) -> Dict:
         "Only output valid JSON."
     )
     user = f"Analyze this transcript:\n```\n{text}\n```"
-    completion = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
         model=MODEL_ANALYZE,
         messages=[{"role": "system", "content": system},
                   {"role": "user", "content": user}],
@@ -84,12 +77,6 @@ def save_uploaded_file(uploaded_file) -> str:
 
 # ------------- MAIN BODY -----------------------------------------------------
 st.title("🎙️ Voice ➜ Intelligence")
-
-if not api_key:
-    st.warning("Enter your OpenAI API key to start.")
-    st.stop()
-
-openai.api_key = api_key
 
 audio_bytes = None
 audio_filename = None
