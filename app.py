@@ -11,7 +11,7 @@ from typing import Dict
 # ------------- CONFIG --------------------------------------------------------
 st.set_page_config(page_title="Voice Intelligence", page_icon="🎙️", layout="wide")
 MODEL_TRANSCRIBE = "whisper-1"
-# OpenAI recently re-branded GPT-4-o (May-2024).  If “gpt-4-1” is GA in your tenancy
+# OpenAI recently re-branded GPT-4-o (May-2024).  If "gpt-4-1" is GA in your tenancy
 # swap MODEL_ANALYZE below.  Fallback to gpt-4o.
 MODEL_ANALYZE = "gpt-4.1-2025-04-14"       # try "gpt-4o" or "gpt-4o-2024-05-13"
 
@@ -20,7 +20,16 @@ RECORD_LIB = "audio_recorder_streamlit"  # pip install audio_recorder_streamlit
 # ------------- SIDEBAR -------------------------------------------------------
 with st.sidebar:
     st.header("🔑 API Settings")
-    api_key = st.text_input("OpenAI API Key", type="password")
+    
+    # Try to get API key from secrets first, fallback to user input
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+        st.success("✅ API key loaded from secrets")
+    except (KeyError, FileNotFoundError):
+        api_key = st.text_input("OpenAI API Key", type="password")
+        if not api_key:
+            st.info("Add OPENAI_API_KEY to your Streamlit secrets or enter it above")
+    
     temp = st.slider("LLM temperature", 0.0, 1.0, 0.3, 0.05)
     st.markdown("---")
     input_mode = st.radio(
